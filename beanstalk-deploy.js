@@ -4,17 +4,11 @@
 const awsApiRequest = require('./aws-api-request');
 const fs = require('fs');
 
-const IS_GITHUB_ACTION = !!process.env.GITHUB_ACTIONS;
-
-if (IS_GITHUB_ACTION) {
-    console.error = msg => console.log(`::error::${msg}`);
-    console.warn = msg => console.log(`::warning::${msg}`);
-}
 
 function createStorageLocation() {
     return awsApiRequest({
         service: 'elasticbeanstalk',
-        querystring: { Operation: 'CreateStorageLocation', Version: '2010-12-01' }
+        querystring: {Operation: 'CreateStorageLocation', Version: '2010-12-01'}
     });
 }
 
@@ -45,7 +39,7 @@ function uploadFileToS3(bucket, s3Key, filebuffer) {
         host: `${bucket}.s3.${awsApiRequest.region}.amazonaws.com`,
         path: s3Key,
         method: 'PUT',
-        headers: { 'Content-Type': 'application/octet-stream' },
+        headers: {'Content-Type': 'application/octet-stream'},
         payload: filebuffer
     });
 }
@@ -258,51 +252,23 @@ function main() {
         waitForRecoverySeconds = 30,
         waitUntilDeploymentIsFinished = true; //Whether or not to wait for the deployment to complete...
 
-    if (IS_GITHUB_ACTION) { //Running in GitHub Actions
-        application = strip(process.env.INPUT_APPLICATION_NAME);
-        environmentName = strip(process.env.INPUT_ENVIRONMENT_NAME);
-        versionLabel = strip(process.env.INPUT_VERSION_LABEL);
-        versionDescription = strip(process.env.INPUT_VERSION_DESCRIPTION);
-        file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
-
-        awsApiRequest.maxBackoffRetries = strip(process.env.INPUT_MAX_BACKOFF_RETRIES);
-        awsApiRequest.accessKey = strip(process.env.INPUT_AWS_ACCESS_KEY);
-        awsApiRequest.secretKey = strip(process.env.INPUT_AWS_SECRET_KEY);
-        awsApiRequest.sessionToken = strip(process.env.INPUT_AWS_SESSION_TOKEN);
-        awsApiRequest.region = strip(process.env.INPUT_REGION);
-
-        if (process.env.INPUT_EXISTING_BUCKET_NAME) {
-            existingBucketName = strip(process.env.INPUT_EXISTING_BUCKET_NAME);
-        }
-
-        if ((process.env.INPUT_WAIT_FOR_DEPLOYMENT || '').toLowerCase() == 'false') {
-            waitUntilDeploymentIsFinished = false;
-        }
-
-        if (process.env.INPUT_WAIT_FOR_ENVIRONMENT_RECOVERY) {
-            waitForRecoverySeconds = parseInt(process.env.INPUT_WAIT_FOR_ENVIRONMENT_RECOVERY);
-        }
-        useExistingVersionIfAvailable = process.env.INPUT_USE_EXISTING_VERSION_IF_AVAILABLE == 'true' || process.env.INPUT_USE_EXISTING_VERSION_IF_AVAILABLE == 'True';
-
-    } else { //Running as command line script
-        if (process.argv.length < 6) {
-            console.log('\nbeanstalk-deploy: Deploy a zip file to AWS Elastic Beanstalk');
-            console.log('https://github.com/einaregilsson/beanstalk-deploy\n');
-            console.log('Usage: beanstalk-deploy.js <application> <environment> <versionLabel> <region> [<filename>]\n');
-            console.log('Environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be defined for the program to work.');
-            console.log('If <filename> is skipped the script will attempt to deploy an existing version named <versionLabel>.\n');
-            process.exit(1);
-        }
-
-        [application, environmentName, versionLabel, region, file] = process.argv.slice(2);
-        versionDescription = ''; //Not available for this.
-        useExistingVersionIfAvailable = false; //This option is not available in the console version
-
-        awsApiRequest.accessKey = strip(process.env.AWS_ACCESS_KEY_ID);
-        awsApiRequest.secretKey = strip(process.env.AWS_SECRET_ACCESS_KEY);
-        awsApiRequest.sessionToken = strip(process.env.AWS_SESSION_TOKEN);
-        awsApiRequest.region = strip(region);
+    if (process.argv.length < 6) {
+        console.log('\nbeanstalk-deploy: Deploy a zip file to AWS Elastic Beanstalk');
+        console.log('https://github.com/einaregilsson/beanstalk-deploy\n');
+        console.log('Usage: beanstalk-deploy.js <application> <environment> <versionLabel> <region> [<filename>]\n');
+        console.log('Environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be defined for the program to work.');
+        console.log('If <filename> is skipped the script will attempt to deploy an existing version named <versionLabel>.\n');
+        process.exit(1);
     }
+
+    [application, environmentName, versionLabel, region, file] = process.argv.slice(2);
+    versionDescription = ''; //Not available for this.
+    useExistingVersionIfAvailable = false; //This option is not available in the console version
+
+    awsApiRequest.accessKey = strip(process.env.AWS_ACCESS_KEY_ID);
+    awsApiRequest.secretKey = strip(process.env.AWS_SECRET_ACCESS_KEY);
+    awsApiRequest.sessionToken = strip(process.env.AWS_SESSION_TOKEN);
+    awsApiRequest.region = strip(region);
 
     console.log('Beanstalk-Deploy: GitHub Action for deploying to Elastic Beanstalk.');
     console.log('https://github.com/einaregilsson/beanstalk-deploy');
