@@ -250,7 +250,7 @@ function main() {
         existingBucketName = null,
         useExistingVersionIfAvailable,
         waitForRecoverySeconds = 30,
-        waitUntilDeploymentIsFinished = true; //Whether or not to wait for the deployment to complete...
+        waitUntilDeploymentIsFinished = false; //Whether or not to wait for the deployment to complete...
 
     if (process.argv.length < 6) {
         console.log('\nbeanstalk-deploy: Deploy a zip file to AWS Elastic Beanstalk');
